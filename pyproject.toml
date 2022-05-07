@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "yamt"
+version = "0.0.1"
+description = "yet another monkey toolkit"
+authors = ["lightmanLP <liteman1000@gmail.com>", "mikk357 <mikk357@yandex.com>"]
+license = "MIT"
+readme = "README.md"
+keywords = ["utils", "tools", "misc"]
+
+[tool.poetry.urls]
+"Github" = "https://github.com/UT1C/yamt"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+typing-extensions = "^4.2.0"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^4.0.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

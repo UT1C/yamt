@@ -1,0 +1,4 @@
+[flake8]
+max-line-length = 100
+ignore = F401, W503
+exclude = .git, build, dist, venv, .venv, docs, examples, tests, *.egg-info
