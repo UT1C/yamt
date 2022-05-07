@@ -1,4 +1,5 @@
-from typing import Generator, TypeVar, Callable, Iterable
+from typing import Generator, TypeVar, Callable, Annotated, Iterator, Any, overload
+from collections.abc import Iterable
 from collections import UserString
 from enum import Enum
 import itertools
@@ -67,7 +68,24 @@ class Sentinel:
 sentinel = Sentinel()
 
 
-# TODO: make it generators
+@overload
+def simple_chain(*items: Iterable[T] | T) -> Generator[T, None, None]:
+    ...
+
+
+@overload
+def simple_chain(*items: Iterable[Any] | Any) -> Generator[Any, None, None]:
+    ...
+
+
+def simple_chain(*items: Iterable[Any] | Any) -> Generator[Any, None, None]:
+    for i in items:
+        if isinstance(i, Iterable):
+            yield from i
+        else:
+            yield i
+
+
 _mapper_sentinel = Sentinel()
 
 
@@ -80,60 +98,70 @@ def mapdeafult(
     none: NoneT = None,
     check_values_before: bool = False,
     check_values_after: bool = False,
-    weak_value_check: bool = False
-) -> tuple[ReturnT, ...] | DefaultT:
+    weak_value_check: bool = False,
+    as_tuple: bool = False
+) -> tuple[ReturnT, ...] | Iterator[ReturnT] | DefaultT:
     """ Map iterables. Return default if all values is none.
         Can check not only iterables, but also values on none.
+        Always calculates first element on call.
     """
 
-    if func is None:
-        maps = [
-            i
-            for i in iterables
-            if (empty_check and i) or i != none
-        ]
-
-    else:
-        def mapper(val: T) -> ReturnT | Sentinel:
-            if (
+    items = itertools.chain.from_iterable(
+        i
+        for i in iterables
+        if (empty_check and i) or i != none
+    )
+    if func is not None:
+        items = (
+            _mapper_sentinel if (
                 check_values_before
-                and ((weak_value_check and not val) or val == none)
-            ):
-                return _mapper_sentinel
-            return func(val)
+                and (
+                    (weak_value_check and not i)
+                    or i == none
+                )
+            ) else func(i)
+            for i in items
+        )
 
-        maps = list()
-        for i in iterables:
-            if (empty_check and i) or i != none:
-                maps.append(map(mapper, i))
-
-    result = _mapdefault_validator(maps, none, check_values_after, weak_value_check)
-    if result is None:
+    result = _mapdefault_generator(
+        items,
+        none,
+        check_values_after,
+        weak_value_check
+    )
+    if not next(result):
         if default_factory is not None and callable(default_factory):
             default = default_factory()
         return default
+    if as_tuple:
+        result = tuple(result)
     return result
 
 
-def _mapdefault_validator(
-    maps: "list[map[ReturnT | NoneT | Sentinel]]",
+def _mapdefault_generator(
+    items: "Iterable[ReturnT | NoneT | Sentinel]",
     none: NoneT = None,
     check_values_after: bool = False,
     weak_value_check: bool = False
-) -> tuple[ReturnT, ...] | None:
-    if not maps:
-        return None
-    vals = tuple(
-        i
-        for i in itertools.chain(*maps)
-        if (
-            i is not _mapper_sentinel
-            and (
-                not check_values_after
-                or (i != none and (not weak_value_check or i))
-            )
-        )
-    )
-    if not vals:
-        return None
-    return vals
+) -> Annotated[
+    Iterator[ReturnT | bool],
+    bool, ReturnT, ReturnT, ...
+]:
+    first = True
+
+    for i in items:
+        if i is _mapper_sentinel:
+            continue
+        if check_values_after:
+            if not (weak_value_check and i):
+                continue
+            elif i == none:
+                continue
+
+        if first:
+            yield True
+            first = False
+        yield i
+
+    if first:
+        yield False

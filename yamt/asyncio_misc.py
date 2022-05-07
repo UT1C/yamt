@@ -1,11 +1,14 @@
 from typing import (
     Awaitable,
     TypeVar,
-    Iterable,
     Generic,
     NoReturn,
     Callable,
+    AsyncIterator,
+    Annotated,
 )
+from collections.abc import Iterable
+import itertools
 import asyncio
 
 from typing_extensions import Self
@@ -53,7 +56,6 @@ class _AwaitableWrap(Generic[T]):
         raise StopIteration(self.val)
 
 
-# TODO: make it generators
 _mapper_sentinel = Sentinel()
 
 
@@ -66,65 +68,69 @@ async def amapdeafult(
     none: NoneT = None,
     check_values_before: bool = False,
     check_values_after: bool = False,
-    weak_value_check: bool = False
-) -> tuple[ReturnT, ...] | DefaultT:
+    weak_value_check: bool = False,
+    as_list: bool = False
+) -> list[ReturnT] | AsyncIterator[ReturnT] | DefaultT:
     """ async version of mapdefault with coro support """
 
-    if func is None:
-        maps = [
-            i
-            for i in iterables
-            if (empty_check and i) or i != none
-        ]
-
-    else:
-        async def amapper(val: T) -> ReturnT | Sentinel:
-            if (
+    items = itertools.chain.from_iterable(
+        i
+        for i in iterables
+        if (empty_check and i) or i != none
+    )
+    if func is not None:
+        items = (
+            _mapper_sentinel if (
                 check_values_before
-                and ((weak_value_check and not val) or val == none)
-            ):
-                return _mapper_sentinel
-            return await func(val)
+                and (
+                    (weak_value_check and not i)
+                    or i == none
+                )
+            ) else await func(i)
+            for i in items
+        )
 
-        maps = list()
-        for i in iterables:
-            if (empty_check and i) or i != none:
-                maps.append((amapper(val) for val in i))
-
-    result = await _amapdefault_validator(
-        maps,
+    result = _amapdefault_generator(
+        items,
         none,
         check_values_after,
         weak_value_check
     )
-    if result is None:
+    if not next(result):
         if default_factory is not None and callable(default_factory):
             default = default_factory()
         if asyncio.iscoroutine(default_factory):
             default = await default
         return default
+    if as_list:
+        result = [i async for i in result]
     return result
 
 
-async def _amapdefault_validator(
-    maps: "list[map[ReturnT | NoneT | Sentinel]]",
+async def _amapdefault_generator(
+    items: "Iterable[ReturnT | NoneT | Sentinel]",
     none: NoneT = None,
     check_values_after: bool = False,
     weak_value_check: bool = False
-) -> tuple[ReturnT, ...] | None:
-    if not maps:
-        return None
-    vals = tuple(
-        i
-        for i in (await autogather(*maps))
-        if (
-            i is not _mapper_sentinel
-            and (
-                not check_values_after
-                or (i != none and (not weak_value_check or i))
-            )
-        )
-    )
-    if not vals:
-        return None
-    return vals
+) -> Annotated[
+    AsyncIterator[ReturnT | bool],
+    bool, ReturnT, ReturnT, ...
+]:
+    first = True
+
+    for i in items:
+        if i is _mapper_sentinel:
+            continue
+        if check_values_after:
+            if not (weak_value_check and i):
+                continue
+            elif i == none:
+                continue
+
+        if first:
+            yield True
+            first = False
+        yield i
+
+    if first:
+        yield False

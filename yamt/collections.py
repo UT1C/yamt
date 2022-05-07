@@ -1,7 +1,6 @@
 from typing import (
     TypeVar,
     Generic,
-    Iterable,
     Iterator,
     SupportsIndex,
     Literal,
@@ -9,7 +8,7 @@ from typing import (
     Any,
     overload,
 )
-from collections.abc import MutableSequence
+from collections.abc import Iterable, MutableSequence
 from collections import deque
 import itertools
 import random
