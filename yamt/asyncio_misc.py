@@ -19,6 +19,7 @@ T = TypeVar("T")
 NoneT = TypeVar("NoneT")
 DefaultT = TypeVar("DefaultT")
 ReturnT = TypeVar("ReturnT")
+CallableT = TypeVar("CallableT", bound=Callable)
 
 
 def autogather(
@@ -134,3 +135,31 @@ async def _amapdefault_generator(
 
     if first:
         yield False
+
+
+class SimpleAsyncEventManager:
+    handlers: dict[str, list[Callable]]
+
+    def __init__(self) -> None:
+        self.handlers = dict()
+
+    async def emit(self, name: str, *args, **kwargs) -> bool:
+        handlers = self.handlers.get(name)
+        if handlers is None:
+            return False
+        await asyncio.gather(
+            *(
+                i(*args, **kwargs)
+                for i in handlers
+            )
+        )
+        return True
+
+    def on(self, name: str) -> Callable[[CallableT], CallableT]:
+        def wrapper(func: CallableT) -> CallableT:
+            handlers = self.handlers.get(name)
+            if handlers is None:
+                handlers = self.handlers[name] = list()
+            handlers.append(func)
+            return func
+        return wrapper
