@@ -6,7 +6,9 @@ from typing import (
     Callable,
     AsyncIterator,
     Annotated,
+    Hashable,
 )
+from collections import defaultdict
 from collections.abc import Iterable
 import itertools
 import asyncio
@@ -20,6 +22,7 @@ NoneT = TypeVar("NoneT")
 DefaultT = TypeVar("DefaultT")
 ReturnT = TypeVar("ReturnT")
 CallableT = TypeVar("CallableT", bound=Callable)
+KeyT = TypeVar("KeyT", bound=Hashable)
 
 
 def autogather(
@@ -137,29 +140,33 @@ async def _amapdefault_generator(
         yield False
 
 
-class SimpleAsyncEventManager:
-    handlers: dict[str, list[Callable]]
+class AsyncEventManager(Generic[KeyT]):
+    handlers: dict[KeyT, list[tuple[Callable, bool]]]
+    _loop: asyncio.AbstractEventLoop | None
 
-    def __init__(self) -> None:
-        self.handlers = dict()
+    def __init__(self, loop: asyncio.AbstractEventLoop | None = None) -> None:
+        self._loop = loop
+        self.handlers = defaultdict(list)
 
-    async def emit(self, name: str, *args, **kwargs) -> bool:
-        handlers = self.handlers.get(name)
-        if handlers is None:
-            return False
-        await asyncio.gather(
+    @property
+    def loop(self) -> asyncio.AbstractEventLoop:
+        if self._loop is None:
+            self._loop = asyncio.get_event_loop()
+        return self._loop
+
+    async def emit(self, name: KeyT, *args, **kwargs) -> tuple[Any, ...]:
+        return await asyncio.gather(
             *(
-                i(*args, **kwargs)
-                for i in handlers
+                func(name, *args, **kwargs) if with_name else func(*args, **kwargs)
+                for func, with_name in self.handlers[name]
             )
         )
-        return True
 
-    def on(self, name: str) -> Callable[[CallableT], CallableT]:
+    def dispatch(self, name: KeyT, *args, **kwargs):
+        self.loop.create_task(self.emit(name, *args, **kwargs))
+
+    def on(self, name: KeyT, with_name: bool = False) -> Callable[[CallableT], CallableT]:
         def wrapper(func: CallableT) -> CallableT:
-            handlers = self.handlers.get(name)
-            if handlers is None:
-                handlers = self.handlers[name] = list()
-            handlers.append(func)
+            self.handlers[name].append((func, with_name))
             return func
         return wrapper
