@@ -1,4 +1,13 @@
-from typing import Generator, TypeVar, Callable, Annotated, Iterator, Any, overload
+from typing import (
+    Generator,
+    TypeVar,
+    Callable,
+    Annotated,
+    Iterator,
+    Generic,
+    Any,
+    overload,
+)
 from collections.abc import Iterable
 from collections import UserString
 from enum import Enum
@@ -8,6 +17,7 @@ T = TypeVar("T")
 NoneT = TypeVar("NoneT")
 DefaultT = TypeVar("DefaultT")
 ReturnT = TypeVar("ReturnT")
+SingletonT = TypeVar("SingletonT", bound="SingletonMeta")
 
 
 def recursive_base_attributes(cls: type) -> Iterator[tuple[str, Any]]:
@@ -174,3 +184,12 @@ def _mapdefault_generator(
 
     if first:
         yield False
+
+
+class SingletonMeta(type, Generic[SingletonT]):
+    __instance: SingletonT | None = None
+
+    def __call__(cls: type[SingletonT], *args, **kwargs) -> T:
+        if cls.__instance is None:
+            cls.__instance = super().__call__(*args, **kwargs)
+        return cls.__instance
