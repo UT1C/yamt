@@ -15,6 +15,7 @@ from .misc import (
     WordForm,
     FormedWord,
     Sentinel,
+    SingletonMeta,
     recursive_base_attributes,
     split_on_chuncks,
     simple_chain,

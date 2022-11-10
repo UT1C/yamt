@@ -65,10 +65,7 @@ class FormedWord(UserString):
             self._data = default_form
             return
 
-        self.__dict__.update(
-            (i.value, locs[i] or "")
-            for i in WordForm
-        )
+        self.__dict__.update((i.value, locs.get(i, "")) for i in WordForm)
         self.__dict__.update(kwargs)
         self.default_form = default_form
 
