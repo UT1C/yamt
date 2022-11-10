@@ -186,7 +186,7 @@ def _mapdefault_generator(
 class SingletonMeta(type, Generic[SingletonT]):
     __instance: SingletonT | None = None
 
-    def __call__(cls: type[SingletonT], *args, **kwargs) -> T:
+    def __call__(cls: type[SingletonT], *args, **kwargs) -> SingletonT:
         if cls.__instance is None:
             cls.__instance = super().__call__(*args, **kwargs)
         return cls.__instance
