@@ -1,14 +1,7 @@
-from typing import Any, Iterator
+from typing import Any
 from enum import EnumMeta, Enum
 
-
-def recursive_base_attributes(cls: type) -> Iterator[tuple[str, Any]]:
-    if cls is object:
-        return
-
-    yield from cls.__dict__.items()
-    for i in cls.__bases__:
-        yield from recursive_base_attributes(i)
+from .misc import recursive_base_attributes
 
 
 # TODO: try to fix typehints (maybe with typestubs?)

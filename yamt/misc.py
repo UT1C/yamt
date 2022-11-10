@@ -10,6 +10,15 @@ DefaultT = TypeVar("DefaultT")
 ReturnT = TypeVar("ReturnT")
 
 
+def recursive_base_attributes(cls: type) -> Iterator[tuple[str, Any]]:
+    if cls is object:
+        return
+
+    yield from cls.__dict__.items()
+    for i in cls.__bases__:
+        yield from recursive_base_attributes(i)
+
+
 def split_on_chuncks(size: int, *items: T) -> Generator[tuple[T, ...], None, None]:
     for i in range(0, len(items), size):
         yield items[i:i + size]

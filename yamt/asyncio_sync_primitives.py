@@ -2,6 +2,9 @@ import asyncio
 import inspect
 import traceback
 import types
+import logging
+
+logger = logging.getLogger("yamt")
 
 
 # TODO: fix stack inspection in recursive call (rework locked_stack)
@@ -10,6 +13,7 @@ class StackLimitedLock(asyncio.Lock):
     locked_stack: list[int]
 
     def __init__(self, stack_limit: int | None = None) -> None:
+        logger.warning("unstable synchronization primitive used")
         self.stack_limit = stack_limit
         self.locked_stack = list()
         super().__init__()

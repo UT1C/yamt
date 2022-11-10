@@ -1,4 +1,5 @@
 from typing import (
+    TYPE_CHECKING,
     TypeVar,
     Generic,
     Iterator,
@@ -13,9 +14,10 @@ from collections import deque
 import itertools
 import random
 
-from typing_extensions import Self
-
 from .typing import SupportsRichComparison
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 T = TypeVar("T")
 MSeqT = TypeVar("MSeqT", bound=MutableSequence)
@@ -122,7 +124,7 @@ class ChainedSequence(MutableSequence, Generic[MSeqT, T]):
     def __format__(self, format_spec: str) -> str:
         return str(self).__format__(format_spec)
 
-    def __copy__(self) -> Self | MSeqT | MutableSequence[T]:
+    def __copy__(self) -> "Self | MSeqT | MutableSequence[T]":
         return self.__class__(*(i.copy() for i in self.seqs))
 
     @property
@@ -167,7 +169,7 @@ class ChainedSequence(MutableSequence, Generic[MSeqT, T]):
             if ln != len(i):
                 return
 
-    def copy(self) -> Self | MSeqT | MutableSequence[T]:
+    def copy(self) -> "Self | MSeqT | MutableSequence[T]":
         return self.__copy__()
 
     @overload

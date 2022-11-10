@@ -1,4 +1,5 @@
 from typing import (
+    TYPE_CHECKING,
     Awaitable,
     TypeVar,
     Generic,
@@ -14,9 +15,10 @@ from collections.abc import Iterable
 import itertools
 import asyncio
 
-from typing_extensions import Self
-
 from .misc import Sentinel
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 T = TypeVar("T")
 NoneT = TypeVar("NoneT")
@@ -54,7 +56,7 @@ class _AwaitableWrap(Generic[T]):
     def __init__(self, val: T) -> None:
         self.val = val
 
-    def __await__(self) -> Self:
+    def __await__(self) -> "Self":
         return self
 
     def __next__(self) -> NoReturn:

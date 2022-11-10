@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yamt"
-version = "0.0.1"
+version = "0.1.0"
 description = "yet another monkey toolkit"
 authors = ["lightmanLP <liteman1000@gmail.com>", "mikk357 <mikk357@yandex.com>"]
 license = "MIT"
@@ -12,11 +12,12 @@ keywords = ["utils", "tools", "misc"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-typing-extensions = "^4.2.0"
 
-[tool.poetry.dev-dependencies]
-flake8 = "^4.0.1"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^5.0.4"
+typing-extensions = "^4.4.0"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
