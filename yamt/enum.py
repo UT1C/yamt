@@ -1,7 +1,10 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from enum import EnumMeta, Enum
 
 from .misc import recursive_base_attributes
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 # TODO: try to fix typehints (maybe with typestubs?)
@@ -23,7 +26,7 @@ class DataRichEnumMeta(EnumMeta):
         classdict: dict[str, Any],
         *,
         extender: type | None = None
-    ) -> type:
+    ) -> "Self":
         containers: list[tuple[str, Any]] = list()
         containers_names: tuple[str, ...] | None
 
