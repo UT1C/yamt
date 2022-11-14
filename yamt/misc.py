@@ -105,7 +105,7 @@ def simple_chain(*items: Iterable[Any] | Any) -> Generator[Any, None, None]:
 _mapper_sentinel = Sentinel()
 
 
-def mapdeafult(
+def mapdefault(
     func: Callable[[T], ReturnT] | None,
     *iterables: Iterable[T] | NoneT,
     default: DefaultT | None = None,

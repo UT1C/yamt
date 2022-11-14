@@ -66,7 +66,7 @@ class _AwaitableWrap(Generic[T]):
 _mapper_sentinel = Sentinel()
 
 
-async def amapdeafult(
+async def amapdefault(
     func: Callable[[T], Awaitable[ReturnT]] | None,
     *iterables: Iterable[T] | NoneT,
     default: DefaultT | None = None,

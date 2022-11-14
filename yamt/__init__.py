@@ -19,13 +19,13 @@ from .misc import (
     recursive_base_attributes,
     split_on_chuncks,
     simple_chain,
-    mapdeafult,
+    mapdefault,
     sentinel,
 )
 from .asyncio_misc import (
     AsyncEventManager,
     autogather,
-    amapdeafult,
+    amapdefault,
 )
 from .typing import (
     SupportsRichComparison,
