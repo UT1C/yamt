@@ -12,6 +12,7 @@ from collections.abc import Iterable
 from collections import UserString
 from enum import Enum
 import itertools
+import random
 
 T = TypeVar("T")
 NoneT = TypeVar("NoneT")
@@ -190,3 +191,16 @@ class SingletonMeta(type, Generic[SingletonT]):
         if cls.__instance is None:
             cls.__instance = super().__call__(*args, **kwargs)
         return cls.__instance
+
+
+class IterativeRandomizer(Generic[T]):
+    data: list[T]
+
+    def __init__(self, data: Iterable[T]) -> None:
+        self.data = list(data)
+
+    def get(self) -> T:
+        i = random.randint(0, len(self.data) - 2)
+        value = self.data.pop(i)
+        self.data.append(value)
+        return value
