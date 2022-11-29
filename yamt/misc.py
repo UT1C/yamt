@@ -200,7 +200,10 @@ class IterativeRandomizer(Generic[T]):
         self.data = list(data)
 
     def get(self) -> T:
-        i = random.randint(0, len(self.data) - 2)
-        value = self.data.pop(i)
-        self.data.append(value)
-        return value
+        if len(self.data) == 1:
+            return self.data[0]
+        else:
+            i = random.randint(0, len(self.data) - 2)
+            value = self.data.pop(i)
+            self.data.append(value)
+            return value

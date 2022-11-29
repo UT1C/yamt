@@ -16,6 +16,7 @@ from .misc import (
     FormedWord,
     Sentinel,
     SingletonMeta,
+    IterativeRandomizer,
     recursive_base_attributes,
     split_on_chuncks,
     simple_chain,
