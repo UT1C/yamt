@@ -5,6 +5,7 @@ from typing import (
     Annotated,
     Iterator,
     Generic,
+    Literal,
     Any,
     overload,
 )
@@ -207,3 +208,10 @@ class IterativeRandomizer(Generic[T]):
             value = self.data.pop(i)
             self.data.append(value)
             return value
+
+
+def anyvalue(iterable: Iterable[T]) -> T | Literal[False]:
+    try:
+        return next(itertools.dropwhile(lambda x: not x, iterable))
+    except StopIteration:
+        return False
