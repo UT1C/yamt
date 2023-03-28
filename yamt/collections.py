@@ -106,10 +106,10 @@ class ChainedSequence(MutableSequence, Generic[MSeqT, T]):
         if isinstance(index, SupportsIndex):
             index, seq = self._get_seq_by_overall_index(index)
             del seq[index]
-
-        start, stop, step, _ = index
-        for i in range(start, stop + 1, step):
-            del self[i]
+        else:
+            start, stop, step, _ = index
+            for i in range(start, stop + 1, step):
+                del self[i]
 
     def __bool__(self) -> bool:
         return any(self.seqs)
@@ -245,6 +245,8 @@ class ChainedSequence(MutableSequence, Generic[MSeqT, T]):
     ) -> tuple[int, MSeqT | MutableSequence[T]]:
         index = self._resolve_index(index)
         for start, end, seq in self.specs:
+            if start == end:
+                continue
             if start <= index <= end:
                 break
         return index - start, seq  # true shit
