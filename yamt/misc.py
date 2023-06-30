@@ -193,9 +193,10 @@ class SingletonMeta(type, Generic[SingletonT]):
             cls.__instance = super().__call__(*args, **kwargs)
         return cls.__instance
 
-    def _wipe_singleton(self):
-        del self.__instance
-        self.__instance = None
+    @classmethod
+    def _wipe_singleton(cls):
+        del cls.__instance
+        cls.__instance = None
 
 
 class IterativeRandomizer(Generic[T]):
