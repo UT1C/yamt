@@ -13,6 +13,7 @@ from typing import (
 from collections import defaultdict
 from collections.abc import Iterable
 import itertools
+import functools
 import asyncio
 
 from .misc import Sentinel
@@ -167,6 +168,9 @@ class AsyncEventManager(Generic[KeyT]):
 
     def dispatch(self, name: KeyT, *args, **kwargs):
         self.loop.create_task(self.emit(name, *args, **kwargs))
+
+    def dispatcher(self, name: KeyT, *args, **kwargs) -> functools.partial["dispatch"]:
+        return functools.partial(self.dispatch, name, *args, **kwargs)
 
     def on(self, name: KeyT, with_name: bool = False) -> Callable[[CallableT], CallableT]:
         def wrapper(func: CallableT) -> CallableT:
