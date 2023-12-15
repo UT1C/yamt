@@ -166,8 +166,8 @@ class AsyncEventManager(Generic[KeyT]):
             )
         )
 
-    def dispatch(self, name: KeyT, *args, **kwargs):
-        self.loop.create_task(self.emit(name, *args, **kwargs))
+    def dispatch(self, name: KeyT, *args, **kwargs) -> asyncio.Task[tuple[Any, ...]]:
+        return self.loop.create_task(self.emit(name, *args, **kwargs))
 
     def dispatcher(self, name: KeyT, *args, **kwargs) -> functools.partial["dispatch"]:
         return functools.partial(self.dispatch, name, *args, **kwargs)
