@@ -18,6 +18,7 @@ from .misc import (
     Sentinel,
     SingletonMeta,
     IterativeRandomizer,
+    DependencyInjector as DI,
     recursive_base_attributes,
     split_on_chuncks,
     simple_chain,
