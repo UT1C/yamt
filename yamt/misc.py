@@ -130,7 +130,7 @@ def mapdefault(
     items = itertools.chain.from_iterable(
         i
         for i in iterables
-        if (empty_check and i) or i != none
+        if i != none and (not empty_check or i)
     )
     if func is not None:
         items = (
@@ -151,7 +151,7 @@ def mapdefault(
         weak_value_check
     )
     if not next(result):
-        if default_factory is not None and callable(default_factory):
+        if default_factory is not None:
             default = default_factory()
         return default
     if as_tuple:
