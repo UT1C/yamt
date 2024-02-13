@@ -1,4 +1,5 @@
 from typing import (
+    TYPE_CHECKING,
     Generator,
     TypeVar,
     Callable,
@@ -17,6 +18,9 @@ import itertools
 import random
 
 from .exceptions import InjectionError
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 T = TypeVar("T")
 InstanceT = TypeVar("InstanceT", bound=object)
@@ -237,7 +241,21 @@ class DependencyInjector(Generic[T, InstanceT]):
     def value(self) -> T:
         return self.get(self.key)
 
-    def __get__(self, instance: InstanceT | None, cls: type[InstanceT]) -> T:
+    @overload
+    def __get__(self, instance: InstanceT, cls: type[InstanceT] | None = None) -> T:
+        ...
+
+    @overload
+    def __get__(self, instance: Literal[None], cls: type[InstanceT]) -> "Self":
+        ...
+
+    def __get__(
+        self,
+        instance: InstanceT | None,
+        cls: type[InstanceT] | None = None
+    ) -> T | "Self":
+        if instance is None:
+            return self
         return self.value
 
     @classmethod
