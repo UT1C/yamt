@@ -19,6 +19,7 @@ import random
 from .exceptions import InjectionError
 
 T = TypeVar("T")
+InstanceT = TypeVar("InstanceT", bound=object)
 NoneT = TypeVar("NoneT")
 DefaultT = TypeVar("DefaultT")
 ReturnT = TypeVar("ReturnT")
@@ -225,15 +226,19 @@ def anyvalue(iterable: Iterable[T]) -> T | Literal[False]:
         return False
 
 
-class DependencyInjector(Generic[T]):
+class DependencyInjector(Generic[T, InstanceT]):
     container: ClassVar[dict[str | type, Any]] = dict()
     key: str | type[T]
 
     def __init__(self, key: str | type[T]) -> None:
         self.key = key
 
-    def __get__(self) -> T:
+    @property
+    def value(self) -> T:
         return self.get(self.key)
+
+    def __get__(self, instance: InstanceT | None, cls: type[InstanceT]) -> T:
+        return self.value
 
     @classmethod
     def store(cls, value: T, key: str | type[T] | None = None) -> T:
