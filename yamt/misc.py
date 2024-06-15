@@ -21,8 +21,10 @@ from .exceptions import InjectionError
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+    from .typing import SameAs
 
 T = TypeVar("T")
+TT = TypeVar("TT")
 InstanceT = TypeVar("InstanceT", bound=object)
 NoneT = TypeVar("NoneT")
 DefaultT = TypeVar("DefaultT")
@@ -259,13 +261,13 @@ class DependencyInjector(Generic[T, InstanceT]):
         return self.value
 
     @classmethod
-    def store(cls, value: T, key: str | type[T] | None = None) -> T:
+    def store(cls, value: Annotated[TT, "SameAs[T]"], key: str | type[TT] | None = None) -> TT:
         if key is None:
             key = type(value)
         cls.container[key] = value
 
     @classmethod
-    def get(cls, key: str | type[T]) -> T:
+    def get(cls, key: str | type[Annotated[TT, "SameAs[T]"]]) -> TT:
         value = cls.container.get(key)
         if value is None:
             raise InjectionError(key)
