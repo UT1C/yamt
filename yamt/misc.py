@@ -265,6 +265,7 @@ class DependencyInjector(Generic[T, InstanceT]):
         if key is None:
             key = type(value)
         cls.container[key] = value
+        return value
 
     @classmethod
     def get(cls, key: str | type[Annotated[TT, "SameAs[T]"]]) -> TT:
