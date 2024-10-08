@@ -215,6 +215,12 @@ class IterativeRandomizer(Generic[T]):
     def __init__(self, data: Iterable[T]) -> None:
         self.data = list(data)
 
+    def __iter__(self) -> Self:
+        return self
+
+    def __next__(self) -> T:
+        return self.get()
+
     def get(self) -> T:
         if len(self.data) == 1:
             return self.data[0]
