@@ -10,7 +10,10 @@ from .enum import (
 from .asyncio_sync_primitives import (
     Grab,
     StackLimitedLock,
-    SemaphorePerSecond,
+    SemaphorePerSecond,  # deprecated
+    PerSecondSemaphore,
+    OverflowLock,
+    SkippedOverflowLock,
 )
 from .misc import (
     WordForm,

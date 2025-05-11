@@ -45,7 +45,7 @@ class StackLimitedLock(asyncio.Lock):
         self.locked_stack = list()
         super().__init__()
 
-    async def __aenter__(self) -> None:
+    async def acquire(self):
         cur_frame = inspect.currentframe().f_back
         cur_hash = hash(cur_frame.f_code)
 
@@ -57,24 +57,17 @@ class StackLimitedLock(asyncio.Lock):
                     self.locked_stack.append(cur_hash)
                     return None
 
-        await super().__aenter__()
+        await super().acquire()
         self.locked_stack.append(cur_hash)
-        return None
 
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        tb: types.TracebackType | None
-    ) -> None:
+    def release(self):
         cur_frame = inspect.currentframe().f_back
         self.locked_stack.remove(hash(cur_frame.f_code))
         if self.locked():
-            await super().__aexit__(exc_type, exc, tb)
-        return None
+            super().release()
 
 
-class SemaphorePerSecond(asyncio.Semaphore):
+class PerSecondSemaphore(asyncio.Semaphore):
     deffer_time: float
     _lock: asyncio.Lock
 
@@ -83,16 +76,50 @@ class SemaphorePerSecond(asyncio.Semaphore):
         self.deffer_time = 1 / value
         self._lock = asyncio.Lock()
 
+    def release(self):
+        asyncio.create_task(self._deffered_exit())
+
+    async def _deffered_exit(self):
+        async with self._lock:
+            await asyncio.sleep(self.deffer_time)
+            super().release()
+
+
+# deprecated
+SemaphorePerSecond = PerSecondSemaphore
+
+
+class LockOverflowError(Exception):
+    ...
+
+
+class OverflowLock(asyncio.Lock):
+    limit: int
+    counter: int = 0
+
+    def __init__(self, limit: int) -> None:
+        self.limit = limit
+        super().__init__()
+
+    async def acquire(self):
+        if self.limit <= self.counter:
+            raise LockOverflowError()
+
+        await super().acquire()
+        self.counter += 1
+
+    def release(self):
+        super().release()
+        self.counter -= 1
+
+
+class SkippedOverflowLock(OverflowLock):
     async def __aexit__(
         self,
         exc_type: type[BaseException] | None,
         exc: BaseException | None,
         tb: types.TracebackType | None
-    ) -> None:
-        asyncio.create_task(self._deffered_exit(exc_type, exc, tb))
-        return None
-
-    async def _deffered_exit(self, *args, **kwargs):
-        async with self._lock:
-            await asyncio.sleep(self.deffer_time)
-            await super().__aexit__(*args, **kwargs)
+    ) -> bool | None:
+        if isinstance(exc, LockOverflowError):
+            return True
+        return await super().__aexit__(exc_type, exc, tb)
