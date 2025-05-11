@@ -8,7 +8,7 @@ from typing import (
     AsyncIterator,
     Annotated,
     Hashable,
-    Any,
+    Sequence,
 )
 from collections import defaultdict
 from collections.abc import Iterable
@@ -158,7 +158,7 @@ class AsyncEventManager(Generic[KeyT]):
             self._loop = asyncio.get_event_loop()
         return self._loop
 
-    async def emit(self, name: KeyT, *args, **kwargs) -> tuple[Any, ...]:
+    async def emit(self, name: KeyT, *args, **kwargs) -> Sequence:
         return await asyncio.gather(
             *(
                 func(name, *args, **kwargs) if with_name else func(*args, **kwargs)
@@ -166,7 +166,7 @@ class AsyncEventManager(Generic[KeyT]):
             )
         )
 
-    def dispatch(self, name: KeyT, *args, **kwargs) -> asyncio.Task[tuple[Any, ...]]:
+    def dispatch(self, name: KeyT, *args, **kwargs) -> asyncio.Task[Sequence]:
         return self.loop.create_task(self.emit(name, *args, **kwargs))
 
     def dispatcher(self, name: KeyT, *args, **kwargs) -> functools.partial["dispatch"]:
