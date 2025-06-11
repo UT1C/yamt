@@ -1,9 +1,12 @@
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 import asyncio
 import inspect
 import traceback
 import types
 import logging
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 logger = logging.getLogger("yamt")
 
@@ -13,14 +16,40 @@ class ContextSkip(Exception):
 
 
 class Grab:
-    is_grabbed: bool = False
+    """ Usage example:
+        ```
+        async with Grab() as grab, grab.skip:
+            ...
+        ```
+    """
 
-    async def __aenter__(self) -> None:
-        if self.is_grabbed:
-            raise ContextSkip()
+    class Skip:
+        grab: "Grab"
 
-        self.is_grabbed = True
-        return None
+        def __init__(self, grab: "Grab") -> None:
+            self.grab = grab
+
+        async def __aenter__(self):
+            if self.grab.grab_count > 1:
+                raise ContextSkip()
+
+        async def __aexit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc: BaseException | None,
+            tb: types.TracebackType | None
+        ):
+            ...
+
+    grab_count: int = 0
+    skip: Skip
+
+    def __init__(self) -> None:
+        self.skip = self.Skip(self)
+
+    async def __aenter__(self) -> "Self":
+        self.grab_count += 1
+        return self
 
     async def __aexit__(
         self,
@@ -30,7 +59,7 @@ class Grab:
     ) -> Literal[True] | None:
         if isinstance(exc, ContextSkip):
             return True
-        self.is_grabbed = False
+        self.grab_count -= 1
         return None
 
 
