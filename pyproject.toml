@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yamt"
-version = "0.1.7"
+version = "1.0.0"
 description = "yet another monkey toolkit"
 authors = ["lightmanLP <liteman1000@gmail.com>", "mikk357 <mikk357@yandex.com>"]
 license = "MIT"
