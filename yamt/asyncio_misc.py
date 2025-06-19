@@ -1,17 +1,21 @@
 from typing import (
     TYPE_CHECKING,
-    Awaitable,
     TypeVar,
     Generic,
     NoReturn,
+    Annotated,
+    Any,
+)
+from collections.abc import (
+    Iterable,
+    Generator,
     Callable,
     AsyncIterator,
-    Annotated,
+    Awaitable,
     Hashable,
     Sequence,
 )
 from collections import defaultdict
-from collections.abc import Iterable
 import itertools
 import functools
 import asyncio
@@ -27,6 +31,7 @@ DefaultT = TypeVar("DefaultT")
 ReturnT = TypeVar("ReturnT")
 CallableT = TypeVar("CallableT", bound=Callable)
 KeyT = TypeVar("KeyT", bound=Hashable)
+InstanceT = TypeVar("InstanceT")
 
 
 def autogather(
@@ -177,3 +182,35 @@ class AsyncEventManager(Generic[KeyT]):
             self.handlers[name].append((func, with_name))
             return func
         return wrapper
+
+
+class AwaitableDescriptor(Generic[T, InstanceT]):
+    func: Callable[[InstanceT], Awaitable[T]]
+    _instance: InstanceT
+
+    def __init__(self, func: Callable[[InstanceT], Awaitable[T]]) -> None:
+        self.func = func
+
+    def __get__(self, instance: InstanceT, owner=None) -> Self:
+        self._instance = instance
+        return self
+
+    def __await__(self) -> Generator[Any, Any, T]:
+        return self.get().__await__()
+
+    async def get(self) -> T:
+        return await self.func(self._instance)
+
+
+class CachedAwaitableDescriptor(AwaitableDescriptor[T, InstanceT], Generic[T, InstanceT]):
+    @property
+    def key(self) -> str:
+        return f"_cache_{id(self)}"
+
+    async def get(self) -> T:
+        key = self.key
+        value = getattr(self._instance, key, None)
+        if value is None:
+            value = await super().get()
+            setattr(self._instance, key, value)
+        return value

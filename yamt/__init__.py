@@ -31,9 +31,12 @@ from .misc import (
 )
 from .asyncio_misc import (
     AsyncEventManager,
+    AwaitableDescriptor,
+    CachedAwaitableDescriptor,
     autogather,
     amapdefault,
 )
 from .typing import (
     SupportsRichComparison,
 )
+from .decoration_trigger import DecorationTrigger
