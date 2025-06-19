@@ -191,7 +191,7 @@ class AwaitableDescriptor(Generic[T, InstanceT]):
     def __init__(self, func: Callable[[InstanceT], Awaitable[T]]) -> None:
         self.func = func
 
-    def __get__(self, instance: InstanceT, owner=None) -> Self:
+    def __get__(self, instance: InstanceT, owner=None) -> "Self":
         self._instance = instance
         return self
 
