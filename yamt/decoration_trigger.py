@@ -30,7 +30,10 @@ class DecorationTrigger(Generic[InstanceT, P]):
                 func = getattr(instance, name)
                 decorated = decorator(func)
                 if isinstance(decorated, Callable):
-                    functools.update_wrapper(decorated, func)
+                    try:
+                        functools.update_wrapper(decorated, func)
+                    except Exception as e:
+                        ...
                 setattr(instance, name, decorated)
             return init(instance, *args, **kwargs)
         return wrapper
